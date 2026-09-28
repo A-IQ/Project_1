@@ -192,11 +192,11 @@ input, select {
 .legend .swatch { margin-right: 0; }
 .sw-income { background: var(--income); }
 .sw-expenses { background: var(--expenses); }
-.table-toggle { margin-top: 8px; font-size: 0.85rem; }
+.table-toggle { margin-top: 8px; font-size: 0.85rem; overflow-x: auto; }
 .table-toggle summary { cursor: pointer; color: var(--text-2); }
 
 /* ---------- tables & lists ---------- */
-.table-wrap { overflow-x: auto; }
+.table-wrap { overflow-x: auto; position: relative; }
 table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--border); }
 th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; }

@@ -34,11 +34,15 @@
     );
   }
 
-  function niceMax(v) {
-    if (v <= 0) return 1;
-    const exp = Math.pow(10, Math.floor(Math.log10(v)));
-    for (const m of [1, 2, 2.5, 5, 10]) if (m * exp >= v) return m * exp;
-    return 10 * exp;
+  /** Axis scale with round tick steps (1/2/2.5/5 x 10^n) and at most `maxTicks` intervals. */
+  function niceScale(v, maxTicks) {
+    if (v <= 0) return { max: 1, ticks: 1 };
+    const raw = v / maxTicks;
+    const exp = Math.pow(10, Math.floor(Math.log10(raw)));
+    let step = 10 * exp;
+    for (const m of [1, 2, 2.5, 5]) if (m * exp >= raw) { step = m * exp; break; }
+    const ticks = Math.ceil(v / step);
+    return { max: ticks * step, ticks };
   }
 
   function compact(value, currency) {
@@ -93,11 +97,10 @@
     const m = { top: 12, right: 8, bottom: 28, left: 56 };
     const iw = width - m.left - m.right;
     const ih = height - m.top - m.bottom;
-    const max = niceMax(Math.max(1, ...rows.flatMap((r) => [r.income, r.expenses])));
+    const { max, ticks } = niceScale(Math.max(1, ...rows.flatMap((r) => [r.income, r.expenses])), 4);
     const svg = el("svg", { viewBox: `0 0 ${width} ${height}`, width, height, role: "img", "aria-label": opts.label || "Income and expenses by month" });
     container.prepend(svg);
 
-    const ticks = 4;
     for (let i = 0; i <= ticks; i++) {
       const v = (max / ticks) * i;
       const y = m.top + ih - (v / max) * ih;
