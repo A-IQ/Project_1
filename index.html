@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pocket Ledger</title>
+  <meta name="description" content="A private, offline personal finance manager: track spending, budgets, savings goals and recurring bills.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">₵</span>
+      <h1>Pocket Ledger</h1>
+    </div>
+    <div class="month-nav" aria-label="Selected month">
+      <button type="button" class="icon-btn" id="prev-month" aria-label="Previous month">‹</button>
+      <span id="month-label" class="month-label"></span>
+      <button type="button" class="icon-btn" id="next-month" aria-label="Next month">›</button>
+    </div>
+    <button type="button" class="btn primary" id="add-tx-btn">+ Add transaction</button>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" data-tab="dashboard" aria-selected="true">Dashboard</button>
+    <button role="tab" data-tab="transactions">Transactions</button>
+    <button role="tab" data-tab="budgets">Budgets</button>
+    <button role="tab" data-tab="goals">Goals</button>
+    <button role="tab" data-tab="recurring">Recurring</button>
+    <button role="tab" data-tab="settings">Settings</button>
+  </nav>
+
+  <main>
+    <!-- Dashboard -->
+    <section id="tab-dashboard" class="tab-panel" role="tabpanel">
+      <div id="welcome" class="card welcome" hidden>
+        <h2>Welcome 👋</h2>
+        <p>Everything you enter is stored only in this browser. Start by adding a transaction, or explore with example data.</p>
+        <div class="row">
+          <button type="button" class="btn primary" data-action="add-tx">Add your first transaction</button>
+          <button type="button" class="btn" data-action="load-sample">Load sample data</button>
+        </div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="grid-2">
+        <article class="card">
+          <header class="card-head">
+            <h2>Income vs expenses</h2>
+            <div class="legend">
+              <span><span class="swatch sw-income"></span>Income</span>
+              <span><span class="swatch sw-expenses"></span>Expenses</span>
+            </div>
+          </header>
+          <div class="chart" id="chart-monthly"></div>
+          <details class="table-toggle">
+            <summary>Show as table</summary>
+            <div id="table-monthly"></div>
+          </details>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <h2>Spending by category</h2>
+            <span class="muted" id="category-total"></span>
+          </header>
+          <div class="chart" id="chart-categories"></div>
+          <p class="empty" id="categories-empty" hidden>No expenses this month.</p>
+        </article>
+      </div>
+
+      <div class="grid-2">
+        <article class="card">
+          <header class="card-head">
+            <h2>Budgets</h2>
+            <button type="button" class="link-btn" data-goto="budgets">Manage</button>
+          </header>
+          <div id="dash-budgets"></div>
+        </article>
+        <article class="card">
+          <header class="card-head">
+            <h2>Recent transactions</h2>
+            <button type="button" class="link-btn" data-goto="transactions">View all</button>
+          </header>
+          <ul class="tx-list" id="dash-recent"></ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- Transactions -->
+    <section id="tab-transactions" class="tab-panel" role="tabpanel" hidden>
+      <div class="card">
+        <div class="filters">
+          <input type="search" id="f-search" placeholder="Search description or category" aria-label="Search">
+          <select id="f-type" aria-label="Type">
+            <option value="">All types</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+          <select id="f-category" aria-label="Category"></select>
+          <select id="f-period" aria-label="Period">
+            <option value="month">Selected month</option>
+            <option value="all">All time</option>
+          </select>
+        </div>
+        <div id="tx-summary" class="muted small"></div>
+        <div class="table-wrap">
+          <table class="tx-table">
+            <thead>
+              <tr><th>Date</th><th>Description</th><th>Category</th><th class="num">Amount</th><th><span class="sr-only">Actions</span></th></tr>
+            </thead>
+            <tbody id="tx-body"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="tx-empty" hidden>No transactions match.</p>
+      </div>
+    </section>
+
+    <!-- Budgets -->
+    <section id="tab-budgets" class="tab-panel" role="tabpanel" hidden>
+      <div class="grid-2">
+        <article class="card">
+          <header class="card-head"><h2 id="budget-title">Budget status</h2></header>
+          <div id="budget-overview"></div>
+          <div id="budget-rows"></div>
+          <div id="budget-unbudgeted"></div>
+        </article>
+        <article class="card">
+          <header class="card-head"><h2>Monthly limits</h2></header>
+          <p class="muted small">Set a monthly spending limit per category. Leave blank for no budget.</p>
+          <form id="budget-form" class="budget-form"></form>
+        </article>
+      </div>
+    </section>
+
+    <!-- Goals -->
+    <section id="tab-goals" class="tab-panel" role="tabpanel" hidden>
+      <div class="grid-2">
+        <div id="goal-list" class="stack"></div>
+        <article class="card">
+          <header class="card-head"><h2 id="goal-form-title">New savings goal</h2></header>
+          <form id="goal-form" class="form">
+            <input type="hidden" name="id">
+            <label>Name <input name="name" required maxlength="60" placeholder="e.g. Emergency fund"></label>
+            <label>Target amount <input name="target" required inputmode="decimal" placeholder="0.00"></label>
+            <label>Already saved <input name="saved" inputmode="decimal" placeholder="0.00"></label>
+            <label>Target date <span class="muted">(optional)</span> <input type="date" name="deadline"></label>
+            <p class="form-error" role="alert"></p>
+            <div class="row">
+              <button type="submit" class="btn primary">Save goal</button>
+              <button type="button" class="btn" id="goal-cancel" hidden>Cancel</button>
+            </div>
+          </form>
+        </article>
+      </div>
+    </section>
+
+    <!-- Recurring -->
+    <section id="tab-recurring" class="tab-panel" role="tabpanel" hidden>
+      <div class="grid-2">
+        <article class="card">
+          <header class="card-head"><h2>Recurring transactions</h2></header>
+          <p class="muted small">Due items are added automatically each time you open the app.</p>
+          <ul id="recurring-list" class="rec-list"></ul>
+          <p class="empty" id="recurring-empty" hidden>No recurring transactions yet.</p>
+        </article>
+        <article class="card">
+          <header class="card-head"><h2>Add recurring</h2></header>
+          <form id="recurring-form" class="form">
+            <div class="seg" role="radiogroup" aria-label="Type">
+              <label><input type="radio" name="type" value="expense" checked> Expense</label>
+              <label><input type="radio" name="type" value="income"> Income</label>
+            </div>
+            <label>Description <input name="description" required maxlength="80" placeholder="e.g. Rent"></label>
+            <label>Amount <input name="amount" required inputmode="decimal" placeholder="0.00"></label>
+            <label>Category <select name="category" required></select></label>
+            <label>Frequency
+              <select name="frequency">
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Every 2 weeks</option>
+                <option value="monthly" selected>Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </label>
+            <label>First date <input type="date" name="startDate" required></label>
+            <label>End date <span class="muted">(optional)</span> <input type="date" name="endDate"></label>
+            <p class="form-error" role="alert"></p>
+            <button type="submit" class="btn primary">Add recurring</button>
+          </form>
+        </article>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section id="tab-settings" class="tab-panel" role="tabpanel" hidden>
+      <div class="grid-2">
+        <article class="card">
+          <header class="card-head"><h2>Preferences</h2></header>
+          <form class="form" id="settings-form">
+            <label>Currency
+              <select name="currency" id="currency-select"></select>
+            </label>
+          </form>
+          <h3>Categories</h3>
+          <div class="cat-columns">
+            <div>
+              <h4>Expense</h4>
+              <ul class="chips" id="cat-expense"></ul>
+              <form class="inline-add" data-kind="expense">
+                <input name="name" placeholder="New expense category" maxlength="40" aria-label="New expense category">
+                <button class="btn small" type="submit">Add</button>
+              </form>
+            </div>
+            <div>
+              <h4>Income</h4>
+              <ul class="chips" id="cat-income"></ul>
+              <form class="inline-add" data-kind="income">
+                <input name="name" placeholder="New income category" maxlength="40" aria-label="New income category">
+                <button class="btn small" type="submit">Add</button>
+              </form>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <header class="card-head"><h2>Your data</h2></header>
+          <p class="muted small">Data never leaves this device. Export a backup regularly — clearing browser data will erase it.</p>
+          <div class="stack">
+            <div class="row">
+              <button type="button" class="btn" id="export-json">Export backup (JSON)</button>
+              <label class="btn file-btn">Restore backup<input type="file" id="import-json" accept=".json,application/json" hidden></label>
+            </div>
+            <div class="row">
+              <button type="button" class="btn" id="export-csv">Export transactions (CSV)</button>
+              <label class="btn file-btn">Import CSV<input type="file" id="import-csv" accept=".csv,text/csv" hidden></label>
+            </div>
+            <p class="muted small">CSV import needs a header row with <code>date</code> and <code>amount</code>; <code>type</code>, <code>category</code> and <code>description</code> are optional. Without a type column, negative amounts are treated as expenses.</p>
+            <div class="row">
+              <button type="button" class="btn" data-action="load-sample">Load sample data</button>
+              <button type="button" class="btn danger" id="clear-data">Delete all data</button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <!-- Transaction dialog -->
+  <dialog id="tx-dialog">
+    <form id="tx-form" class="form" method="dialog">
+      <h2 id="tx-dialog-title">Add transaction</h2>
+      <input type="hidden" name="id">
+      <div class="seg" role="radiogroup" aria-label="Type">
+        <label><input type="radio" name="type" value="expense" checked> Expense</label>
+        <label><input type="radio" name="type" value="income"> Income</label>
+      </div>
+      <label>Amount <input name="amount" required inputmode="decimal" placeholder="0.00" autocomplete="off"></label>
+      <label>Category <select name="category" required></select></label>
+      <label>Date <input type="date" name="date" required></label>
+      <label>Description <input name="description" maxlength="80" placeholder="Optional"></label>
+      <p class="form-error" role="alert"></p>
+      <div class="row end">
+        <button type="button" class="btn" id="tx-cancel">Cancel</button>
+        <button type="submit" class="btn primary" value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="js/finance.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
